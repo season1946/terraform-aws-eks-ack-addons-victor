@@ -1,14 +1,11 @@
----
-title: Step Functions with ACK
-sidebar_position: 5
----
-# Step Functions with ACK
-[AWS Step Functions](https://aws.amazon.com/step-functions/?step-functions.sort-by=item.additionalFields.postDateTime&step-functions.sort-order=desc) which is a serverless workflow service can integrate with Amazon EMR on EKS and [Amazon EventBridge]((https://aws.amazon.com/eventbridge/)) to build event-driven workflows. After installing [AWS Controllers for Kubernetes (ACK)](https://aws-controllers-k8s.github.io/community/docs/community/overview/) in EKS, you can provision and configure serverless AWS resources: Amazon EventBridge and AWS Step Functions from EKS. The team can do the whole data operation without leaving the Kubernetes platform and only need to maintain the EKS cluster since all the other components are serverless.
+
+# Build Event-Driven Data Pipelines using AWS Controllers for Kubernetes (ACK) and Amazon EMR on EKS
+In this example, we demonstrate to build an event-driven data pipeline using [AWS Controllers for Kubernetes (ACK)](https://aws-controllers-k8s.github.io/community/docs/community/overview/) and Amazon EMR on EKS. ACK is used to provision and configure serverless AWS resources: [Amazon EventBridge](https://aws.amazon.com/eventbridge/) and [AWS Step Functions](https://aws.amazon.com/step-functions/). Triggered by an Amazon EventBridge rule, AWS Step Functions orchestrates jobs running in Amazon EMR on EKS. By using ACK, you can use the Kubernetes API and configuration language to create and configure AWS resources the same way you create and configure a Kubernetes data processing jobs. The team can do the whole data operation without leaving the Kubernetes platform and only need to maintain the EKS cluster since all the other components are serverless.
 
 
 The example demonstrates to build an event-driven data pipeline using ACK and Amazon EMR on EKS. Triggered by an Amazon EventBridge rule, AWS Step Functions orchestrates jobs running in Amazon EMR on EKS. 
 
-[Code repo](https://github.com/awslabs/data-on-eks/tree/main/schedulers/terraform/sfn-eb-ack) for this example.
+[Code repo](https://github.com/season1946/terraform-aws-eks-ack-addons-victor/blob/demo/examples/event-driven-pipeline) for this example.
 
 ## Prerequisites:
 
@@ -23,8 +20,8 @@ Ensure that you have the following tools installed locally:
 To provision this example:
 
 ```bash
-git clone https://github.com/awslabs/data-on-eks.git
-cd data-on-eks/schedulers/terraform/sfn-eb-ack
+git clone -b demo https://github.com/season1946/terraform-aws-eks-ack-addons-victor.git
+cd examples/event-driven-pipeline
 
 region=<your region> # set region variable for following commands
 terraform init
