@@ -1,6 +1,6 @@
 
 
-S3_BUCKET="sparkjob-demo-bucket"
+S3_BUCKET="sparkjob-victor-bucket"
 REGION="us-west-2"       # Enter region
 
 

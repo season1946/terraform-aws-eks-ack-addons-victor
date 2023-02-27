@@ -1,6 +1,6 @@
 apiVersion: s3.services.k8s.aws/v1alpha1
 kind: Bucket
 metadata:
-  name: sparkjob-demo-bucket
+  name: sparkjob-victor-bucket
 spec:
-  name: sparkjob-demo-bucket
+  name: sparkjob-victor-bucket
