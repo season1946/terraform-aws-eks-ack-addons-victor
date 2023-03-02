@@ -1,0 +1,140 @@
+# you need to install argo workflows first
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: emr-citibike-${RANDOM_ID2}
+spec:
+  entrypoint: emr-citibike
+  templates:
+  - name: emr-citibike
+    steps:
+    - - name: emr-citibike-csv-parquet
+        template: emr-citibike-csv-parquet
+    - - name: emr-citibike-ridership
+        template: emr-citibike-ridership
+      - name: emr-citibike-popular-stations
+        template: emr-citibike-popular-stations
+      - name: emr-citibike-trips-by-age
+        template: emr-citibike-trips-by-age
+
+  # This is parent job that converts csv data to parquet
+  - name: emr-citibike-csv-parquet
+    resource:
+      action: create
+      successCondition: status.state == COMPLETED
+      failureCondition: status.state == FAILED      
+      manifest: |
+        apiVersion: emrcontainers.services.k8s.aws/v1alpha1
+        kind: JobRun
+        metadata:
+          name: my-ack-jobrun-csv-parquet-${RANDOM_ID2}
+        spec:
+          name: my-ack-jobrun-csv-parquet-${RANDOM_ID2}
+          virtualClusterRef:
+            from:
+              name: my-ack-vc
+          executionRoleARN: "${ACK_JOB_EXECUTION_ROLE_ARN}"
+          releaseLabel: "emr-6.7.0-latest"
+          jobDriver:
+            sparkSubmitJobDriver:
+              entryPoint: "s3://${S3BUCKET}/application/citibike-convert-csv-to-parquet.py"
+              entryPointArguments: [${S3BUCKET}]
+              sparkSubmitParameters: "--conf spark.executor.instances=2 --conf spark.executor.memory=1G --conf spark.executor.cores=1 --conf spark.driver.cores=1 --conf spark.sql.shuffle.partitions=60 --conf spark.dynamicAllocation.enabled=false"
+          configurationOverrides: |
+            ApplicationConfiguration: null
+            MonitoringConfiguration:
+              CloudWatchMonitoringConfiguration:
+                LogGroupName: /emr-on-eks-logs/${EKS_CLUSTER_NAME}
+                LogStreamNamePrefix: citibike
+              S3MonitoringConfiguration:
+                LogUri: s3://${S3BUCKET}/logs
+
+  # This is a child job which runs after csv-parquet jobs is complete
+  - name: emr-citibike-ridership
+    resource:
+      action: create
+      manifest: |
+        apiVersion: emrcontainers.services.k8s.aws/v1alpha1
+        kind: JobRun
+        metadata:
+          name: my-ack-jobrun-ridership-${RANDOM_ID2}
+        spec:
+          name: my-ack-jobrun-ridership-${RANDOM_ID2}
+          virtualClusterRef:
+            from:
+              name: my-ack-vc
+          executionRoleARN: "${ACK_JOB_EXECUTION_ROLE_ARN}"
+          releaseLabel: "emr-6.7.0-latest"
+          jobDriver:
+            sparkSubmitJobDriver:
+              entryPoint: "s3://${S3BUCKET}/application/citibike-ridership.py"
+              entryPointArguments: [${S3BUCKET}]
+              sparkSubmitParameters: "--conf spark.executor.instances=2 --conf spark.executor.memory=1G --conf spark.executor.cores=1 --conf spark.driver.cores=1 --conf spark.sql.shuffle.partitions=60 --conf spark.dynamicAllocation.enabled=false"
+          configurationOverrides: |
+            ApplicationConfiguration: null
+            MonitoringConfiguration:
+              CloudWatchMonitoringConfiguration:
+                LogGroupName: /emr-on-eks-logs/${EKS_CLUSTER_NAME}
+                LogStreamNamePrefix: citibike
+              S3MonitoringConfiguration:
+                LogUri: s3://${S3BUCKET}/logs   
+
+  # This is a child job which runs after csv-parquet jobs is complete
+  - name: emr-citibike-popular-stations
+    resource:
+      action: create
+      manifest: |
+        apiVersion: emrcontainers.services.k8s.aws/v1alpha1
+        kind: JobRun
+        metadata:
+          name: my-ack-jobrun-popular-stations-${RANDOM_ID2}
+        spec:
+          name: my-ack-jobrun-popular-stations-${RANDOM_ID2}
+          virtualClusterRef:
+            from:
+              name: my-ack-vc
+          executionRoleARN: "${ACK_JOB_EXECUTION_ROLE_ARN}"
+          releaseLabel: "emr-6.7.0-latest"
+          jobDriver:
+            sparkSubmitJobDriver:
+              entryPoint: "s3://${S3BUCKET}/application/citibike-popular-stations.py"
+              entryPointArguments: [${S3BUCKET}]
+              sparkSubmitParameters: "--conf spark.executor.instances=2 --conf spark.executor.memory=1G --conf spark.executor.cores=1 --conf spark.driver.cores=1 --conf spark.sql.shuffle.partitions=60 --conf spark.dynamicAllocation.enabled=false"
+          configurationOverrides: |
+            ApplicationConfiguration: null
+            MonitoringConfiguration:
+              CloudWatchMonitoringConfiguration:
+                LogGroupName: /emr-on-eks-logs/${EKS_CLUSTER_NAME}
+                LogStreamNamePrefix: citibike
+              S3MonitoringConfiguration:
+                LogUri: s3://${S3BUCKET}/logs             
+
+  # This is a child job which runs after csv-parquet jobs is complete
+  - name: emr-citibike-trips-by-age
+    resource:
+      action: create
+      manifest: |
+        apiVersion: emrcontainers.services.k8s.aws/v1alpha1
+        kind: JobRun
+        metadata:
+          name: my-ack-jobrun-trips-by-age-${RANDOM_ID2}
+        spec:
+          name: my-ack-jobrun-trips-by-age-${RANDOM_ID2}
+          virtualClusterRef:
+            from:
+              name: my-ack-vc
+          executionRoleARN: "${ACK_JOB_EXECUTION_ROLE_ARN}"
+          releaseLabel: "emr-6.7.0-latest"
+          jobDriver:
+            sparkSubmitJobDriver:
+              entryPoint: "s3://${S3BUCKET}/application/citibike-trips-by-age.py"
+              entryPointArguments: [${S3BUCKET}]
+              sparkSubmitParameters: "--conf spark.executor.instances=2 --conf spark.executor.memory=1G --conf spark.executor.cores=1 --conf spark.driver.cores=1 --conf spark.sql.shuffle.partitions=60 --conf spark.dynamicAllocation.enabled=false"
+          configurationOverrides: |
+            ApplicationConfiguration: null
+            MonitoringConfiguration:
+              CloudWatchMonitoringConfiguration:
+                LogGroupName: /emr-on-eks-logs/${EKS_CLUSTER_NAME}
+                LogStreamNamePrefix: citibike
+              S3MonitoringConfiguration:
+                LogUri: s3://${S3BUCKET}/logs        
